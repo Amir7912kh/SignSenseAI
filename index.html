@@ -3,9 +3,1934 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>SignSense AI - Complete App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* RTL support for Arabic and Hebrew */
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        body.dark-mode {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+        
+        body.dark-mode .bg-white {
+            background-color: #374151;
+        }
+        
+        body.dark-mode .bg-gray-100 {
+            background-color: #4b5563;
+        }
+        
+        body.dark-mode .bg-gray-200 {
+            background-color: #6b7280;
+        }
+        
+        .avatar-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .simple-avatar {
+            width: 200px;
+            height: 300px;
+            position: relative;
+        }
+        
+        .sign-word {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #FFFF00;
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .asl-dictionary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .asl-word {
+            background-color: #e5e7eb;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .asl-word:hover {
+            background-color: #d1d5db;
+            transform: scale(1.05);
+        }
+        
+        .asl-word.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        body.dark-mode .dropdown-content {
+            background-color: #4b5563;
+        }
+        
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content div {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+        
+        body.dark-mode .dropdown-content div {
+            color: white;
+        }
+        
+        .dropdown-content div:hover {
+            background-color: #f1f1f1;
+        }
+        
+        body.dark-mode .dropdown-content div:hover {
+            background-color: #6b7280;
+        }
+        
+        /* Voice recording button */
+        .voice-record-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background-color: #ef4444;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .voice-record-btn.recording {
+            animation: pulse-recording 1.5s infinite;
+        }
+        
+        .voice-record-btn:hover {
+            background-color: #dc2626;
+            transform: translateX(-50%) scale(1.05);
+        }
+        
+        @keyframes pulse-recording {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+        
+        /* Voice status indicator */
+        .voice-status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .voice-status.show {
+            opacity: 1;
+        }
+        
+        /* Voice visualization */
+        .voice-wave {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 40;
+        }
+        
+        .voice-wave.show {
+            opacity: 1;
+        }
+        
+        .voice-wave-bar {
+            width: 5px;
+            height: 5px;
+            background-color: #3b82f6;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+        
+        /* Translation loading animation */
+        .translation-loading {
+            display: inline-block;
+            position: relative;
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+        }
+        
+        .translation-loading div {
+            position: absolute;
+            top: 8px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .translation-loading div:nth-child(1) {
+            left: 2px;
+            animation: translation-loading1 0.6s infinite;
+        }
+        
+        .translation-loading div:nth-child(2) {
+            left: 2px;
+            animation: translation-loading2 0.6s infinite;
+        }
+        
+        .translation-loading div:nth-child(3) {
+            left: 8px;
+            animation: translation-loading2 0.6s infinite;
+        }
+        
+        .translation-loading div:nth-child(4) {
+            left: 14px;
+            animation: translation-loading3 0.6s infinite;
+        }
+        
+        @keyframes translation-loading1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes translation-loading2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(6px, 0); }
+        }
+        
+        @keyframes translation-loading3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+        
+        /* Camera guideline styling */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        
+        .camera-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .hand-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 180px;
+            border: 2px dashed rgba(59, 130, 246, 0.7);
+            border-radius: 8px;
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+        
+        .detection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
+        }
+        
+        .detection-box {
+            position: absolute;
+            border: 2px solid #4CAF50;
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .detection-label {
+            position: absolute;
+            background-color: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            top: -25px;
+            left: 0;
+            white-space: nowrap;
+        }
+        
+        .confidence-meter {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            z-index: 40;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background-color: #555;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .confidence-level {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .camera-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 40;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sign-tag {
+            position: absolute;
+            background-color: #FFFF00;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: #000;
+        }
+        
+        /* Signing detection animation */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
 </head>
-<body>
-    
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4 max-w-4xl">
+        <!-- App Header -->
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center">
+                <div class="text-blue-500 font-bold text-2xl">SignSense AI</div>
+            </div>
+            <div class="flex gap-2">
+                <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200">
+                    <span class="text-xl">🌙</span>
+                </button>
+                <button id="settingsBtn" class="p-2 rounded-full hover:bg-gray-200">
+                    <span class="text-xl">⚙️</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Navigation -->
+        <div class="flex mb-6 rounded-lg overflow-hidden bg-white shadow-md">
+            <button id="textToSignBtn" class="flex-1 py-3 px-4 font-medium text-center bg-blue-500 text-white">
+                Text to Sign
+            </button>
+            <button id="signToTextBtn" class="flex-1 py-3 px-4 font-medium text-center">
+                Sign to Text
+            </button>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <!-- Text to Sign View -->
+            <div id="textToSignView" class="space-y-4">
+                <div class="relative flex gap-2">
+                    <textarea 
+                        id="textInput"
+                        class="flex-grow p-4 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter text to translate to sign language..."
+                        rows="3"
+                    >hello</textarea>
+                    <div class="flex flex-col gap-2">
+                        <button id="translateBtn" class="h-1/2 bg-green-500 text-white px-3 py-2 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">🔄</span>
+                            <span class="ml-1">Translate</span>
+                            <div class="translation-loading hidden">
+                                <div></div><div></div><div></div><div></div>
+                            </div>
+                        </button>
+                        <button id="micBtn" class="h-1/2 bg-blue-500 text-white p-2 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">🎤</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <div class="flex items-center gap-2 relative">
+                        <span>Language:</span>
+                        <div class="dropdown relative">
+                            <button id="languageBtn" class="flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200">
+                                <span id="selectedLanguage">English</span> <span>▼</span>
+                            </button>
+                            <div id="languageDropdown" class="dropdown-content">
+                                <div data-lang="en" data-dir="ltr">English</div>
+                                <div data-lang="es" data-dir="ltr">Spanish</div>
+                                <div data-lang="fr" data-dir="ltr">French</div>
+                                <div data-lang="de" data-dir="ltr">German</div>
+                                <div data-lang="ar" data-dir="rtl">Arabic (العربية)</div>
+                                <div data-lang="he" data-dir="rtl">Hebrew (עברית)</div>
+                                <div data-lang="zh" data-dir="ltr">Chinese</div>
+                                <div data-lang="ja" data-dir="ltr">Japanese</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span>Sign Language:</span>
+                        <div class="dropdown relative">
+                            <button id="signLanguageBtn" class="flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200">
+                                <span id="selectedSignLanguage">ASL</span> <span>▼</span>
+                            </button>
+                            <div id="signLanguageDropdown" class="dropdown-content">
+                                <div data-sign="asl">ASL (American)</div>
+                                <div data-sign="bsl">BSL (British)</div>
+                                <div data-sign="lsf">LSF (French)</div>
+                                <div data-sign="dgs">DGS (German)</div>
+                                <div data-sign="arsl">ArSL (Arabic)</div>
+                                <div data-sign="isl">ISL (Israeli)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Avatar Display Area -->
+                <div class="relative mt-6 bg-gray-200 rounded-lg aspect-video flex items-center justify-center overflow-hidden">
+                    <div id="avatarContainer" class="avatar-container">
+                        <!-- Simple Avatar SVG -->
+                        <svg id="svgAvatar" class="simple-avatar" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Head and face -->
+                            <circle cx="100" cy="80" r="40" fill="#333333" /> <!-- Hair/cap -->
+                            <path d="M 60 80 A 40 40 0 0 0 140 80" fill="#4287f5" /> <!-- Hood top -->
+                            
+                            <!-- Face -->
+                            <circle cx="100" cy="80" r="30" fill="#FFDBAC" /> <!-- Face -->
+                            <path d="M 85 75 A 5 5 0 0 0 95 75" fill="#333333" /> <!-- Left eyebrow -->
+                            <path d="M 105 75 A 5 5 0 0 0 115 75" fill="#333333" /> <!-- Right eyebrow -->
+                            <ellipse cx="90" cy="80" rx="3" ry="2" fill="#333333" /> <!-- Left eye -->
+                            <ellipse cx="110" cy="80" rx="3" ry="2" fill="#333333" /> <!-- Right eye -->
+                            <path d="M 90 90 A 10 10 0 0 0 110 90" fill="#333333" /> <!-- Smile -->
+                            
+                            <!-- Body -->
+                            <path d="M 60 90 L 60 200 L 140 200 L 140 90 A 40 40 0 0 1 60 90" fill="#4287f5" /> <!-- Body with hood -->
+                            
+                            <!-- Right arm - positioned for waving -->
+                            <path d="M 140 120 L 200 150 L 190 170 L 140 140" fill="#4287f5" id="rightArm" /> <!-- Right arm -->
+                            
+                            <!-- Left arm - positioned over chest -->
+                            <path d="M 60 120 L 30 170 L 50 180 L 85 160" fill="#4287f5" id="leftArm" /> <!-- Left arm -->
+                            
+                            <!-- Hands -->
+                            <path d="M 190 170 L 200 190 A 15 15 0 0 1 170 190 L 180 170" fill="#FFDBAC" id="rightHand" /> <!-- Right hand -->
+                            <path d="M 50 180 L 40 200 A 15 15 0 0 0 70 200 L 60 180" fill="#FFDBAC" id="leftHand" /> <!-- Left hand -->
+                            
+                            <!-- Word label -->
+                            <rect id="wordBox" x="50" y="260" width="100" height="30" rx="10" fill="#FFFF00" />
+                            <text id="wordText" x="100" y="280" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold">hello</text>
+                        </svg>
+                    </div>
+                    
+                    <!-- Voice status and wave visualization -->
+                    <div id="voiceStatus" class="voice-status">Listening...</div>
+                    
+                    <div id="voiceWave" class="voice-wave">
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                        <div class="voice-wave-bar"></div>
+                    </div>
+                    
+                    <!-- Voice recording button -->
+                    <button id="voiceRecordBtn" class="voice-record-btn">
+                        <span>🎤</span>
+                    </button>
+                    
+                    <!-- Controls -->
+                    <div class="controls absolute bottom-4 flex justify-between w-full px-4">
+                        <div class="flex gap-2">
+                            <button id="resetBtn" class="p-2 rounded-full bg-blue-500 text-white">
+                                <span class="text-xl">🔄</span>
+                            </button>
+                            <button id="playBtn" class="p-2 rounded-full bg-blue-500 text-white">
+                                <span class="text-xl">▶️</span>
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="fullscreenBtn" class="p-2 rounded-full bg-blue-500 text-white">
+                                <span class="text-xl">⛶</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ASL Dictionary -->
+                <h3 class="font-bold mt-6 mb-2">ASL Dictionary</h3>
+                <div class="asl-dictionary" id="aslDictionary">
+                    <!-- Words will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Sign to Text View (hidden by default) -->
+            <div id="signToTextView" class="space-y-4 hidden">
+                <!-- Camera View -->
+                <div class="relative bg-gray-200 rounded-lg aspect-video">
+                    <div class="camera-container">
+                        <!-- Video Feed -->
+                        <video id="cameraFeed" class="camera-feed hidden"></video>
+                        
+                        <!-- Camera Placeholder (shows when camera is off) -->
+                        <div id="cameraPlaceholder" class="camera-placeholder">
+                            <div class="mx-auto rounded-full bg-blue-500 p-4 inline-block mb-4">
+                                <span class="text-xl text-white">📷</span>
+                            </div>
+                            <p class="text-lg font-medium">Camera will capture sign language here</p>
+                            <button id="startCameraBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto">
+                                <span class="text-xl">📷</span> Start Camera
+                            </button>
+                        </div>
+                        
+                        <!-- Hand positioning guide (shows when camera is on) -->
+                        <div id="handGuide" class="hand-guide hidden">
+                            Position your hands here
+                        </div>
+                        
+                        <!-- Detection overlay (for highlighting detected signs) -->
+                        <div id="detectionOverlay" class="detection-overlay"></div>
+                        
+                        <!-- Confidence meter -->
+                        <div id="confidenceMeter" class="confidence-meter hidden">
+                            <span>Confidence:</span>
+                            <div class="confidence-bar">
+                                <div id="confidenceLevel" class="confidence-level"></div>
+                            </div>
+                            <span id="confidenceValue">0%</span>
+                        </div>
+                        
+                        <!-- Sign identification tag -->
+                        <div id="signTag" class="sign-tag">hello</div>
+                        
+                        <!-- Camera controls -->
+                        <div id="cameraControls" class="camera-controls hidden">
+                            <button id="cameraPauseBtn" class="p-2 rounded-full bg-blue-500 text-white">
+                                <span class="text-xl">⏸️</span>
+                            </button>
+                            <button id="cameraSnapBtn" class="p-2 rounded-full bg-blue-500 text-white">
+                                <span class="text-xl">📸</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recognition Results -->
+                <div class="p-4 rounded-lg bg-gray-200 min-h-24">
+                    <div id="recognitionResults" class="text-gray-500 italic">Sign language translation will appear here...</div>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span>Sign Language:</span>
+                        <div class="dropdown relative">
+                            <button id="cameraSignLanguageBtn" class="flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200">
+                                <span id="selectedCameraSignLanguage">ASL</span> <span>▼</span>
+                            </button>
+                            <div id="cameraSignLanguageDropdown" class="dropdown-content">
+                                <div data-sign="asl" class="camera-sign-option">ASL (American)</div>
+                                <div data-sign="bsl" class="camera-sign-option">BSL (British)</div>
+                                <div data-sign="lsf" class="camera-sign-option">LSF (French)</div>
+                                <div data-sign="dgs" class="camera-sign-option">DGS (German)</div>
+                                <div data-sign="arsl" class="camera-sign-option">ArSL (Arabic)</div>
+                                <div data-sign="isl" class="camera-sign-option">ISL (Israeli)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span>Language:</span>
+                        <div class="dropdown relative">
+                            <button id="cameraLanguageBtn" class="flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200">
+                                <span id="selectedCameraLanguage">English</span> <span>▼</span>
+                            </button>
+                            <div id="cameraLanguageDropdown" class="dropdown-content">
+                                <div data-lang="en" data-dir="ltr" class="camera-lang-option">English</div>
+                                <div data-lang="es" data-dir="ltr" class="camera-lang-option">Spanish</div>
+                                <div data-lang="fr" data-dir="ltr" class="camera-lang-option">French</div>
+                                <div data-lang="de" data-dir="ltr" class="camera-lang-option">German</div>
+                                <div data-lang="ar" data-dir="rtl" class="camera-lang-option">Arabic (العربية)</div>
+                                <div data-lang="he" data-dir="rtl" class="camera-lang-option">Hebrew (עברית)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="cameraSaveBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 justify-center">
+                        <span class="text-xl">💾</span> Save
+                    </button>
+                    <button id="speakBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 justify-center">
+                        <span class="text-xl">🔊</span> Speak
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Accessibility Features -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h3 class="font-bold mb-3">Accessibility Options</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span>Text Size</span>
+                        <span id="textSizeValue">Medium</span>
+                    </div>
+                    <input type="range" id="textSizeControl" min="0" max="100" value="50" class="w-full accent-blue-500" />
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span>Avatar Color</span>
+                        <span id="avatarColorValue">Blue</span>
+                    </div>
+                    <div class="flex gap-2 justify-between">
+                        <button class="w-8 h-8 rounded-full bg-blue-500 border-2 border-gray-800 hover:border-gray-800 avatar-color-btn" data-color="#4287f5" data-name="Blue"></button>
+                        <button class="w-8 h-8 rounded-full bg-green-500 border-2 border-transparent hover:border-gray-800 avatar-color-btn" data-color="#48bb78" data-name="Green"></button>
+                        <button class="w-8 h-8 rounded-full bg-red-500 border-2 border-transparent hover:border-gray-800 avatar-color-btn" data-color="#f56565" data-name="Red"></button>
+                        <button class="w-8 h-8 rounded-full bg-purple-500 border-2 border-transparent hover:border-gray-800 avatar-color-btn" data-color="#9f7aea" data-name="Purple"></button>
+                        <button class="w-8 h-8 rounded-full bg-yellow-500 border-2 border-transparent hover:border-gray-800 avatar-color-btn" data-color="#ecc94b" data-name="Yellow"></button>
+                        <button class="w-8 h-8 rounded-full bg-gray-700 border-2 border-transparent hover:border-gray-800 avatar-color-btn" data-color="#4a5568" data-name="Dark"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between">
+                <button id="accessHelpBtn" class="flex items-center gap-2 text-blue-500">
+                    <span class="text-xl">❓</span> Accessibility Help
+                </button>
+                <button id="downloadOfflineBtn" class="flex items-center gap-2 text-blue-500">
+                    <span class="text-xl">📥</span> Download for Offline Use
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Expanded language dictionaries with more translations
+        // ASL Dictionary - extensive list of common ASL words
+        const aslDictionary = [
+            { english: "hello", sign: "hello" },
+            { english: "goodbye", sign: "goodbye" },
+            { english: "thank you", sign: "thankyou" },
+            { english: "please", sign: "please" },
+            { english: "sorry", sign: "sorry" },
+            { english: "yes", sign: "yes" },
+            { english: "no", sign: "no" },
+            { english: "help", sign: "help" },
+            { english: "like", sign: "like" },
+            { english: "love", sign: "love" },
+            { english: "want", sign: "want" },
+            { english: "need", sign: "need" },
+            { english: "eat", sign: "eat" },
+            { english: "drink", sign: "drink" },
+            { english: "sleep", sign: "sleep" },
+            { english: "work", sign: "work" },
+            { english: "play", sign: "play" },
+            { english: "school", sign: "school" },
+            { english: "home", sign: "home" },
+            { english: "friend", sign: "friend" },
+            { english: "family", sign: "family" },
+            { english: "mother", sign: "mother" },
+            { english: "father", sign: "father" },
+            { english: "brother", sign: "brother" },
+            { english: "sister", sign: "sister" },
+            { english: "happy", sign: "happy" },
+            { english: "sad", sign: "sad" },
+            { english: "angry", sign: "angry" },
+            { english: "tired", sign: "tired" },
+            { english: "sick", sign: "sick" },
+            { english: "good", sign: "good" },
+            { english: "bad", sign: "bad" }
+        ];
+
+        // Translations for Arabic
+        const arabicTranslations = {
+            "hello": "مرحبا",
+            "goodbye": "وداعا",
+            "thank you": "شكرا لك",
+            "please": "من فضلك",
+            "sorry": "آسف",
+            "yes": "نعم",
+            "no": "لا",
+            "help": "مساعدة",
+            "love": "حب",
+            "want": "أريد",
+            "need": "أحتاج",
+            "good": "جيد",
+            "bad": "سيء",
+            "eat": "يأكل",
+            "drink": "يشرب",
+            "happy": "سعيد",
+            "sad": "حزين"
+        };
+        
+        // Translations for Hebrew
+        const hebrewTranslations = {
+            "hello": "שלום",
+            "goodbye": "להתראות",
+            "thank you": "תודה",
+            "please": "בבקשה",
+            "sorry": "סליחה",
+            "yes": "כן",
+            "no": "לא",
+            "help": "עזרה",
+            "love": "אהבה",
+            "want": "רוצה",
+            "need": "צריך",
+            "good": "טוב",
+            "bad": "רע",
+            "eat": "לאכול",
+            "drink": "לשתות", 
+            "happy": "שמח",
+            "sad": "עצוב"
+        };
+        
+        // Translations for Spanish
+        const spanishTranslations = {
+            "hello": "hola",
+            "goodbye": "adiós",
+            "thank you": "gracias",
+            "please": "por favor",
+            "sorry": "lo siento",
+            "yes": "sí",
+            "no": "no",
+            "help": "ayuda",
+            "love": "amor"
+        };
+        
+        // Translations for French
+        const frenchTranslations = {
+            "hello": "bonjour",
+            "goodbye": "au revoir",
+            "thank you": "merci",
+            "please": "s'il vous plaît",
+            "sorry": "désolé",
+            "yes": "oui",
+            "no": "non",
+            "help": "aide",
+            "love": "amour"
+        };
+        
+        // Translations for German 
+        const germanTranslations = {
+            "hello": "hallo",
+            "goodbye": "auf wiedersehen",
+            "thank you": "danke",
+            "please": "bitte",
+            "sorry": "entschuldigung",
+            "yes": "ja",
+            "no": "nein",
+            "help": "hilfe",
+            "love": "liebe"
+        };
+
+        // DOM Elements - Text to Sign
+        const textToSignBtn = document.getElementById('textToSignBtn');
+        const signToTextBtn = document.getElementById('signToTextBtn');
+        const textToSignView = document.getElementById('textToSignView');
+        const signToTextView = document.getElementById('signToTextView');
+        const textInput = document.getElementById('textInput');
+        const translateBtn = document.getElementById('translateBtn');
+        const translationLoading = document.querySelector('.translation-loading');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const svgAvatar = document.getElementById('svgAvatar');
+        const wordText = document.getElementById('wordText');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const aslDictionaryElement = document.getElementById('aslDictionary');
+        const avatarColorBtns = document.querySelectorAll('.avatar-color-btn');
+        
+        // Voice recording elements
+        const voiceRecordBtn = document.getElementById('voiceRecordBtn');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const voiceWave = document.getElementById('voiceWave');
+        
+        // DOM Elements - Sign to Text (Camera)
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        const handGuide = document.getElementById('handGuide');
+        const detectionOverlay = document.getElementById('detectionOverlay');
+        const confidenceMeter = document.getElementById('confidenceMeter');
+        const confidenceLevel = document.getElementById('confidenceLevel');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const signTag = document.getElementById('signTag');
+        const cameraControls = document.getElementById('cameraControls');
+        const cameraPauseBtn = document.getElementById('cameraPauseBtn');
+        const cameraSnapBtn = document.getElementById('cameraSnapBtn');
+        const recognitionResults = document.getElementById('recognitionResults');
+        const speakBtn = document.getElementById('speakBtn');
+        
+        // Language elements
+        const languageBtn = document.getElementById('languageBtn');
+        const selectedLanguage = document.getElementById('selectedLanguage');
+        const signLanguageBtn = document.getElementById('signLanguageBtn');
+        const selectedSignLanguage = document.getElementById('selectedSignLanguage');
+        
+        // State variables
+        let isDarkMode = false;
+        let isCameraActive = false;
+        let isCameraPaused = false;
+        let videoStream = null;
+        let detectionInterval = null;
+        let recognizedSigns = [];
+        let isRecording = false;
+        let recognition = null;
+        let currentLanguage = 'en';
+        let currentLanguageDirection = 'ltr';
+        let isTranslating = false;
+        
+        // Create ASL dictionary buttons
+        function populateDictionary() {
+            aslDictionaryElement.innerHTML = '';
+            
+            aslDictionary.forEach(item => {
+                const wordEl = document.createElement('div');
+                wordEl.className = 'asl-word';
+                wordEl.textContent = item.english;
+                wordEl.setAttribute('data-sign', item.sign);
+                
+                wordEl.addEventListener('click', function() {
+                    // Set as active
+                    document.querySelectorAll('.asl-word').forEach(w => w.classList.remove('active'));
+                    wordEl.classList.add('active');
+                    
+                    // Update the textInput
+                    textInput.value = getTranslatedWord(item.english, currentLanguage);
+                    
+                    // Show the sign
+                    updateSign(item.sign);
+                });
+                
+                aslDictionaryElement.appendChild(wordEl);
+            });
+        }
+        
+        // Function to get translated word based on language
+        function getTranslatedWord(word, language) {
+            if (language === 'ar' && arabicTranslations[word]) {
+                return arabicTranslations[word];
+            } else if (language === 'he' && hebrewTranslations[word]) {
+                return hebrewTranslations[word];
+            } else if (language === 'es' && spanishTranslations[word]) {
+                return spanishTranslations[word];
+            } else if (language === 'fr' && frenchTranslations[word]) {
+                return frenchTranslations[word];
+            } else if (language === 'de' && germanTranslations[word]) {
+                return germanTranslations[word];
+            }
+            return word;
+        }
+        
+        // Function to find original English word from translation
+        function findEnglishWord(translatedWord, language) {
+            let dictionary;
+            
+            // Select appropriate dictionary
+            switch (language) {
+                case 'ar':
+                    dictionary = arabicTranslations;
+                    break;
+                case 'he':
+                    dictionary = hebrewTranslations;
+                    break;
+                case 'es':
+                    dictionary = spanishTranslations;
+                    break;
+                case 'fr':
+                    dictionary = frenchTranslations;
+                    break;
+                case 'de':
+                    dictionary = germanTranslations;
+                    break;
+                default:
+                    return translatedWord; // Already English
+            }
+            
+            // Find English word that corresponds to the translation
+            for (const [english, translation] of Object.entries(dictionary)) {
+                if (translation.toLowerCase() === translatedWord.toLowerCase()) {
+                    return english;
+                }
+            }
+            
+            // If no match found, return original word
+            return translatedWord;
+        }
+        
+        // Function to translate text
+        function translateText() {
+            if (isTranslating) return;
+            
+            const text = textInput.value.trim();
+            if (!text) return;
+            
+            // Show loading indicator
+            isTranslating = true;
+            translationLoading.classList.remove('hidden');
+            
+            // Simulate translation delay (will be replaced with actual API call)
+            setTimeout(() => {
+                // Process text based on language
+                const words = text.split(/\s+/);
+                let processedWords = [];
+                
+                // Translate words one by one
+                for (const word of words) {
+                    // Find corresponding English word if not already in English
+                    const englishWord = findEnglishWord(word.toLowerCase(), currentLanguage);
+                    
+                    // Find matching sign if available
+                    const matchingEntry = aslDictionary.find(entry => 
+                        entry.english.toLowerCase() === englishWord.toLowerCase() ||
+                        entry.english.toLowerCase().includes(englishWord.toLowerCase())
+                    );
+                    
+                    if (matchingEntry) {
+                        processedWords.push({
+                            original: word,
+                            english: matchingEntry.english,
+                            sign: matchingEntry.sign
+                        });
+                    } else {
+                        processedWords.push({
+                            original: word,
+                            english: englishWord,
+                            sign: null
+                        });
+                    }
+                }
+                
+                // Display translation status
+                if (processedWords.length > 0) {
+                    // Find first word with a sign
+                    const firstSignWord = processedWords.find(w => w.sign !== null);
+                    
+                    if (firstSignWord) {
+                        // Show the sign
+                        updateSign(firstSignWord.sign);
+                        
+                        // Update dictionary active state
+                        document.querySelectorAll('.asl-word').forEach(w => {
+                            if (w.textContent.toLowerCase() === firstSignWord.english.toLowerCase()) {
+                                w.classList.add('active');
+                            } else {
+                                w.classList.remove('active');
+                            }
+                        });
+                        
+                        // Show translation message
+                        let msg;
+                        if (currentLanguage === 'ar') {
+                            msg = 'تم الترجمة';
+                        } else if (currentLanguage === 'he') {
+                            msg = 'תורגם בהצלחה';
+                        } else {
+                            msg = 'Translated successfully';
+                        }
+                        
+                        voiceStatus.textContent = msg;
+                        voiceStatus.classList.add('show');
+                        
+                        // Hide message after 3 seconds
+                        setTimeout(() => {
+                            voiceStatus.classList.remove('show');
+                        }, 3000);
+                    }
+                }
+                
+                // Hide loading indicator
+                isTranslating = false;
+                translationLoading.classList.add('hidden');
+            }, 1000);
+        }
+        
+        // Function to update the sign being displayed
+        function updateSign(sign) {
+            // Update the word text
+            wordText.textContent = sign;
+            
+            // Determine which sign to show and update SVG accordingly
+            switch(sign) {
+                case "hello":
+                    // Wave position
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 200 150 L 190 170 L 140 140');
+                    document.getElementById('rightHand').setAttribute('d', 'M 190 170 L 200 190 A 15 15 0 0 1 170 190 L 180 170');
+                    // Smiling face
+                    document.querySelector('path[d^="M 90 90"]').setAttribute('d', 'M 90 90 A 10 10 0 0 0 110 90');
+                    break;
+                    
+                case "goodbye":
+                    // Waving hand lower
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 180 180 L 170 195 L 140 140');
+                    document.getElementById('rightHand').setAttribute('d', 'M 170 195 L 180 215 A 15 15 0 0 1 150 215 L 160 195');
+                    break;
+                    
+                case "thankyou":
+                case "thank you":
+                    // Hand from chin outward
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 170 100 L 160 120 L 140 130');
+                    document.getElementById('rightHand').setAttribute('d', 'M 160 120 L 170 140 A 15 15 0 0 1 140 140 L 150 120');
+                    break;
+                    
+                case "please":
+                    // Circular motion on chest
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 120 140 L 110 160 L 140 160');
+                    document.getElementById('rightHand').setAttribute('d', 'M 110 160 L 100 180 A 15 15 0 0 1 120 180 L 130 160');
+                    break;
+                    
+                case "help":
+                    // Right hand helping left
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 110 150 L 100 170 L 130 160');
+                    document.getElementById('rightHand').setAttribute('d', 'M 100 170 L 90 190 A 15 15 0 0 1 120 190 L 110 170');
+                    document.getElementById('leftArm').setAttribute('d', 'M 60 120 L 80 150 L 70 170 L 50 150');
+                    document.getElementById('leftHand').setAttribute('d', 'M 70 170 L 60 190 A 15 15 0 0 0 90 190 L 80 170');
+                    break;
+                    
+                case "yes":
+                    // Nodding motion (fist bobbing up and down)
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 150 150 L 140 170 L 130 150');
+                    document.getElementById('rightHand').setAttribute('d', 'M 140 170 L 130 190 A 15 10 0 0 1 150 190 L 150 170');
+                    break;
+                    
+                case "no":
+                    // Finger wagging
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 170 130 L 160 150 L 130 140');
+                    document.getElementById('rightHand').setAttribute('d', 'M 160 150 L 170 170 A 10 15 0 0 1 140 170 L 150 150');
+                    break;
+                    
+                // Additional signs could be defined here
+                    
+                default:
+                    // Default pose - neutral
+                    document.getElementById('rightArm').setAttribute('d', 'M 140 120 L 170 150 L 160 170 L 130 140');
+                    document.getElementById('rightHand').setAttribute('d', 'M 160 170 L 170 190 A 15 15 0 0 1 140 190 L 150 170');
+                    document.getElementById('leftArm').setAttribute('d', 'M 60 120 L 30 150 L 40 170 L 70 140');
+                    document.getElementById('leftHand').setAttribute('d', 'M 40 170 L 30 190 A 15 15 0 0 0 60 190 L 50 170');
+                    document.querySelector('path[d^="M 90 90"]').setAttribute('d', 'M 90 90 A 10 10 0 0 0 110 90');
+            }
+            
+            // Animate the avatar
+            svgAvatar.querySelectorAll('path').forEach(path => {
+                path.style.transition = 'all 0.5s ease';
+            });
+        }
+        
+        // Voice recording functionality
+        function setupVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = currentLanguage === 'ar' ? 'ar-SA' : 
+                                   currentLanguage === 'he' ? 'he-IL' : 
+                                   currentLanguage === 'es' ? 'es-ES' :
+                                   currentLanguage === 'fr' ? 'fr-FR' :
+                                   currentLanguage === 'de' ? 'de-DE' :
+                                   'en-US';
+                
+                recognition.onstart = () => {
+                    voiceStatus.textContent = currentLanguage === 'ar' ? 'جاري الإستماع...' : 
+                                            currentLanguage === 'he' ? 'מקשיב...' : 
+                                            currentLanguage === 'es' ? 'Escuchando...' :
+                                            currentLanguage === 'fr' ? 'Écoute...' :
+                                            currentLanguage === 'de' ? 'Hören...' :
+                                            'Listening...';
+                    voiceStatus.classList.add('show');
+                    voiceWave.classList.add('show');
+                    animateVoiceWave();
+                };
+                
+                recognition.onresult = (event) => {
+                    const lastResult = event.results[event.results.length - 1];
+                    const transcript = lastResult[0].transcript.trim();
+                    
+                    // Update text input with transcript
+                    textInput.value = transcript;
+                    
+                    // If it's a final result
+                    if (lastResult.isFinal) {
+                        processVoiceInput(transcript);
+                    }
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error', event.error);
+                    stopVoiceRecording();
+                    
+                    // Show error message
+                    voiceStatus.textContent = currentLanguage === 'ar' ? 'حدث خطأ' : 
+                                            currentLanguage === 'he' ? 'אירעה שגיאה' : 
+                                            currentLanguage === 'es' ? 'Error ocurrido' :
+                                            currentLanguage === 'fr' ? 'Erreur survenue' :
+                                            currentLanguage === 'de' ? 'Fehler aufgetreten' :
+                                            'Error occurred';
+                    voiceStatus.classList.add('show');
+                    
+                    // Hide after 3 seconds
+                    setTimeout(() => {
+                        voiceStatus.classList.remove('show');
+                    }, 3000);
+                };
+                
+                recognition.onend = () => {
+                    if (isRecording) {
+                        // If it was intentionally stopped, don't restart
+                        recognition.start();
+                    } else {
+                        voiceStatus.classList.remove('show');
+                        voiceWave.classList.remove('show');
+                        voiceRecordBtn.classList.remove('recording');
+                    }
+                };
+            } else {
+                voiceRecordBtn.style.display = 'none';
+                alert('Your browser does not support speech recognition.');
+            }
+        }
+        
+        function startVoiceRecording() {
+            if (recognition) {
+                isRecording = true;
+                voiceRecordBtn.classList.add('recording');
+                recognition.start();
+            }
+        }
+        
+        function stopVoiceRecording() {
+            if (recognition) {
+                isRecording = false;
+                recognition.stop();
+                voiceRecordBtn.classList.remove('recording');
+                voiceStatus.classList.remove('show');
+                voiceWave.classList.remove('show');
+            }
+        }
+        
+        function toggleVoiceRecording() {
+            if (isRecording) {
+                stopVoiceRecording();
+            } else {
+                startVoiceRecording();
+            }
+        }
+        
+        function processVoiceInput(text) {
+            const words = text.toLowerCase().split(/\s+/);
+            
+            // Check if any word matches the dictionary
+            for (const word of words) {
+                // Find English equivalent based on language
+                const englishWord = findEnglishWord(word, currentLanguage);
+                
+                const matchingEntry = aslDictionary.find(entry => 
+                    entry.english.toLowerCase() === englishWord
+                );
+                
+                if (matchingEntry) {
+                    updateSign(matchingEntry.sign);
+                    
+                    // Update dictionary active state
+                    document.querySelectorAll('.asl-word').forEach(w => {
+                        if (w.textContent.toLowerCase() === matchingEntry.english.toLowerCase()) {
+                            w.classList.add('active');
+                        } else {
+                            w.classList.remove('active');
+                        }
+                    });
+                    
+                    // Show recognition status
+                    voiceStatus.textContent = currentLanguage === 'ar' ? `تم التعرف على: ${word}` : 
+                                             currentLanguage === 'he' ? `זוהה: ${word}` : 
+                                             currentLanguage === 'es' ? `Reconocido: ${word}` :
+                                             currentLanguage === 'fr' ? `Reconnu: ${word}` :
+                                             currentLanguage === 'de' ? `Erkannt: ${word}` :
+                                             `Recognized: ${word}`;
+                    
+                    // Keep recording but update status
+                    break;
+                }
+            }
+        }
+        
+        function animateVoiceWave() {
+            if (isRecording) {
+                const bars = voiceWave.querySelectorAll('.voice-wave-bar');
+                
+                bars.forEach(bar => {
+                    const height = 5 + Math.random() * 30;
+                    bar.style.height = `${height}px`;
+                });
+                
+                setTimeout(animateVoiceWave, 100);
+            } else {
+                voiceWave.querySelectorAll('.voice-wave-bar').forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            }
+        }
+        
+        // Camera Functions
+        
+        // Start camera when button is clicked
+        startCameraBtn.addEventListener('click', startCamera);
+        
+        // Function to start the camera
+        function startCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    } 
+                })
+                .then(stream => {
+                    videoStream = stream;
+                    cameraFeed.srcObject = stream;
+                    cameraFeed.play();
+                    
+                    // Show camera elements
+                    cameraFeed.classList.remove('hidden');
+                    cameraPlaceholder.classList.add('hidden');
+                    handGuide.classList.remove('hidden');
+                    confidenceMeter.classList.remove('hidden');
+                    cameraControls.classList.remove('hidden');
+                    
+                    // Set camera as active
+                    isCameraActive = true;
+                    
+                    // Start sign detection
+                    startSignDetection();
+                })
+                .catch(error => {
+                    console.error('Error accessing camera:', error);
+                    alert('Could not access camera. Please ensure camera permissions are granted.');
+                });
+            } else {
+                alert('Your browser does not support camera access.');
+            }
+        }
+        
+        // Function to stop the camera
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            // Hide camera elements
+            cameraFeed.classList.add('hidden');
+            cameraPlaceholder.classList.remove('hidden');
+            handGuide.classList.add('hidden');
+            confidenceMeter.classList.add('hidden');
+            cameraControls.classList.add('hidden');
+            
+            // Set camera as inactive
+            isCameraActive = false;
+            
+            // Stop sign detection
+            stopSignDetection();
+            
+            // Clear recognized signs
+            recognizedSigns = [];
+            updateRecognitionResults();
+        }
+        
+        // Function to pause/resume camera
+        cameraPauseBtn.addEventListener('click', () => {
+            if (isCameraActive) {
+                if (isCameraPaused) {
+                    // Resume
+                    cameraFeed.play();
+                    cameraPauseBtn.querySelector('span').textContent = '⏸️';
+                    isCameraPaused = false;
+                    
+                    // Restart detection if it was running
+                    startSignDetection();
+                } else {
+                    // Pause
+                    cameraFeed.pause();
+                    cameraPauseBtn.querySelector('span').textContent = '▶️';
+                    isCameraPaused = true;
+                    
+                    // Stop detection
+                    stopSignDetection();
+                }
+            }
+        });
+        
+        // Function to take a snapshot
+        cameraSnapBtn.addEventListener('click', () => {
+            if (isCameraActive && !isCameraPaused) {
+                // Briefly pause to show the snapshot effect
+                cameraFeed.pause();
+                
+                // Flash effect
+                const flash = document.createElement('div');
+                flash.style.position = 'absolute';
+                flash.style.top = '0';
+                flash.style.left = '0';
+                flash.style.width = '100%';
+                flash.style.height = '100%';
+                flash.style.backgroundColor = 'white';
+                flash.style.opacity = '0.7';
+                flash.style.transition = 'opacity 0.5s ease';
+                flash.style.zIndex = '50';
+                
+                document.querySelector('.camera-container').appendChild(flash);
+                
+                // Fade out flash and resume video
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    setTimeout(() => {
+                        flash.remove();
+                        cameraFeed.play();
+                    }, 500);
+                }, 100);
+                
+                // Simulate saving the captured sign
+                alert('Sign captured and saved to your library!');
+            }
+        });
+        
+        // Sign Detection Simulation
+        
+        function startSignDetection() {
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+            }
+            
+            // Simulate detection every 2-3 seconds
+            detectionInterval = setInterval(() => {
+                if (isCameraActive && !isCameraPaused) {
+                    simulateSignDetection();
+                }
+            }, 2000 + Math.random() * 1000);
+        }
+        
+        function stopSignDetection() {
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            
+            // Hide detection elements
+            signTag.style.opacity = '0';
+            detectionOverlay.innerHTML = '';
+        }
+        
+        function simulateSignDetection() {
+            // Get a random sign from the dictionary
+            const randomIndex = Math.floor(Math.random() * aslDictionary.length);
+            const detectedSign = aslDictionary[randomIndex];
+            
+            // Random confidence level (70-98%)
+            const confidence = 70 + Math.floor(Math.random() * 28);
+            
+            // Update confidence meter
+            updateConfidence(confidence);
+            
+            // Show detection box
+            showDetectionBox(detectedSign.english, confidence);
+            
+            // Add sign to recognized list if confidence is high enough
+            if (confidence > 80) {
+                // Get translated version of the word based on selected language
+                const translatedWord = getTranslatedWord(detectedSign.english, currentLanguage);
+                recognizedSigns.push(translatedWord);
+                
+                // Keep only the last 6 signs
+                if (recognizedSigns.length > 6) {
+                    recognizedSigns.shift();
+                }
+                
+                // Update results display
+                updateRecognitionResults();
+            }
+        }
+        
+        function updateConfidence(value) {
+            confidenceLevel.style.width = `${value}%`;
+            confidenceValue.textContent = `${value}%`;
+            
+            // Color based on confidence level
+            if (value > 90) {
+                confidenceLevel.style.backgroundColor = '#4CAF50'; // Green
+            } else if (value > 70) {
+                confidenceLevel.style.backgroundColor = '#FFC107'; // Yellow
+            } else {
+                confidenceLevel.style.backgroundColor = '#F44336'; // Red
+            }
+        }
+        
+        function showDetectionBox(sign, confidence) {
+            // Clear previous detection boxes
+            detectionOverlay.innerHTML = '';
+            
+            // Generate random position within guide area
+            const width = 120;
+            const height = 100;
+            const left = 50 + Math.floor(Math.random() * 120);
+            const top = 50 + Math.floor(Math.random() * 80);
+            
+            // Create detection box
+            const box = document.createElement('div');
+            box.className = 'detection-box pulse';
+            box.style.width = `${width}px`;
+            box.style.height = `${height}px`;
+            box.style.left = `${left}px`;
+            box.style.top = `${top}px`;
+            
+            // Add label
+            const label = document.createElement('div');
+            label.className = 'detection-label';
+            label.textContent = `${sign} (${confidence}%)`;
+            box.appendChild(label);
+            
+            // Add to overlay
+            detectionOverlay.appendChild(box);
+            
+            // Show with animation
+            setTimeout(() => {
+                box.style.opacity = '1';
+            }, 10);
+            
+            // Update sign tag
+            signTag.textContent = sign;
+            signTag.style.opacity = '1';
+            
+            // Hide after a delay
+            setTimeout(() => {
+                box.style.opacity = '0';
+                signTag.style.opacity = '0';
+                
+                // Remove after fade out
+                setTimeout(() => {
+                    box.remove();
+                }, 300);
+            }, 1500);
+        }
+        
+        function updateRecognitionResults() {
+            if (recognizedSigns.length === 0) {
+                recognitionResults.className = 'text-gray-500 italic';
+                recognitionResults.textContent = currentLanguage === 'ar' ? 'ستظهر ترجمة لغة الإشارة هنا...' : 
+                                               currentLanguage === 'he' ? 'תרגום שפת הסימנים יופיע כאן...' : 
+                                               currentLanguage === 'es' ? 'La traducción de lenguaje de señas aparecerá aquí...' :
+                                               currentLanguage === 'fr' ? 'La traduction de la langue des signes apparaîtra ici...' :
+                                               currentLanguage === 'de' ? 'Die Übersetzung der Gebärdensprache wird hier angezeigt...' :
+                                               'Sign language translation will appear here...';
+                return;
+            }
+            
+            // Build a sentence from recognized signs
+            const sentence = recognizedSigns.join(' ');
+            
+            // Display with proper capitalization and direction
+            recognitionResults.className = '';
+            if (currentLanguageDirection === 'rtl') {
+                recognitionResults.classList.add('rtl');
+            }
+            
+            const header = currentLanguage === 'ar' ? 'الإشارات المكتشفة:' : 
+                          currentLanguage === 'he' ? 'סימנים שזוהו:' : 
+                          currentLanguage === 'es' ? 'Señales detectadas:' :
+                          currentLanguage === 'fr' ? 'Signes détectés:' :
+                          currentLanguage === 'de' ? 'Erkannte Zeichen:' :
+                          'Detected signs:';
+            
+            recognitionResults.innerHTML = `
+                <div class="font-medium">${header}</div>
+                <div class="text-lg mt-2">${currentLanguageDirection === 'rtl' ? sentence : sentence.charAt(0).toUpperCase() + sentence.slice(1)}</div>
+            `;
+        }
+        
+        // Speak button functionality
+        speakBtn.addEventListener('click', () => {
+            if (recognizedSigns.length === 0) return;
+            
+            // Create a sentence from recognized signs
+            const sentence = recognizedSigns.join(' ');
+            
+            // Use speech synthesis to speak the sentence
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                
+                // Set language based on selected language
+                utterance.lang = currentLanguage === 'ar' ? 'ar-SA' : 
+                               currentLanguage === 'he' ? 'he-IL' : 
+                               currentLanguage === 'es' ? 'es-ES' :
+                               currentLanguage === 'fr' ? 'fr-FR' :
+                               currentLanguage === 'de' ? 'de-DE' :
+                               'en-US';
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Your browser does not support speech synthesis.');
+            }
+        });
+        
+        // Tab switching
+        textToSignBtn.addEventListener('click', () => {
+            textToSignBtn.classList.add('bg-blue-500', 'text-white');
+            signToTextBtn.classList.remove('bg-blue-500', 'text-white');
+            textToSignView.classList.remove('hidden');
+            signToTextView.classList.add('hidden');
+            
+            // Stop camera if active
+            stopCamera();
+        });
+
+        signToTextBtn.addEventListener('click', () => {
+            signToTextBtn.classList.add('bg-blue-500', 'text-white');
+            textToSignBtn.classList.remove('bg-blue-500', 'text-white');
+            signToTextView.classList.remove('hidden');
+            textToSignView.classList.add('hidden');
+            
+            // Stop voice recording if active
+            if (isRecording) {
+                stopVoiceRecording();
+            }
+        });
+        
+        // Play button functionality
+        playBtn.addEventListener('click', () => {
+            const text = textInput.value.trim().toLowerCase();
+            if (!text) return;
+            
+            // Check dictionary for the closest matching word
+            const words = text.split(/\s+/);
+            const firstWord = words[0];
+            
+            // First try to find exact match in current language
+            let matchingEntry = null;
+            
+            // Check if we need to look for a translated word
+            if (currentLanguage !== 'en') {
+                // Find the English equivalent
+                const englishWord = findEnglishWord(firstWord, currentLanguage);
+                
+                // Look for matching entry
+                matchingEntry = aslDictionary.find(entry => 
+                    entry.english.toLowerCase() === englishWord.toLowerCase());
+            } else {
+                // Regular English lookup
+                matchingEntry = aslDictionary.find(entry => 
+                    entry.english.toLowerCase() === firstWord || 
+                    entry.english.toLowerCase().includes(firstWord));
+            }
+            
+            if (matchingEntry) {
+                updateSign(matchingEntry.sign);
+                
+                // Update dictionary active state
+                document.querySelectorAll('.asl-word').forEach(w => {
+                    if (w.textContent.toLowerCase() === matchingEntry.english.toLowerCase()) {
+                        w.classList.add('active');
+                    } else {
+                        w.classList.remove('active');
+                    }
+                });
+            } else {
+                // Default to hello if no match
+                updateSign('hello');
+            }
+        });
+        
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            // Reset to default position
+            updateSign('hello');
+            document.querySelectorAll('.asl-word').forEach(w => w.classList.remove('active'));
+            document.querySelector('.asl-word[data-sign="hello"]').classList.add('active');
+        });
+        
+        // Dark mode toggle
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                darkModeToggle.querySelector('span').textContent = '☀️';
+            } else {
+                darkModeToggle.querySelector('span').textContent = '🌙';
+            }
+        });
+        
+        // Avatar color buttons
+        avatarColorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const color = btn.getAttribute('data-color');
+                const colorName = btn.getAttribute('data-name');
+                
+                // Update color display
+                document.getElementById('avatarColorValue').textContent = colorName;
+                
+                // Remove selection from all buttons
+                avatarColorBtns.forEach(b => {
+                    b.classList.remove('border-gray-800');
+                    b.classList.add('border-transparent');
+                });
+                
+                // Add selection to clicked button
+                btn.classList.remove('border-transparent');
+                btn.classList.add('border-gray-800');
+                
+                // Update avatar color
+                svgAvatar.querySelectorAll('path[fill="#4287f5"]').forEach(path => {
+                    path.setAttribute('fill', color);
+                });
+            });
+        });
+        
+        // Text input handler
+        textInput.addEventListener('input', () => {
+            const text = textInput.value.trim().toLowerCase();
+            if (!text) return;
+            
+            // Check for matching words in dictionary as you type
+            const words = text.split(/\s+/);
+            const lastWord = words[words.length - 1];
+            
+            // Highlight matching words in dictionary
+            document.querySelectorAll('.asl-word').forEach(wordEl => {
+                if (wordEl.textContent.toLowerCase().includes(lastWord)) {
+                    wordEl.style.backgroundColor = '#dbeafe'; // Light blue highlight
+                } else {
+                    wordEl.style.backgroundColor = '';
+                }
+            });
+        });
+        
+        // Translate button
+        translateBtn.addEventListener('click', translateText);
+        
+        // Fullscreen button
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            const avatarContainer = document.querySelector('.relative.mt-6');
+            
+            if (!document.fullscreenElement) {
+                if (avatarContainer.requestFullscreen) {
+                    avatarContainer.requestFullscreen();
+                } else if (avatarContainer.webkitRequestFullscreen) {
+                    avatarContainer.webkitRequestFullscreen();
+                } else if (avatarContainer.msRequestFullscreen) {
+                    avatarContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        });
+        
+        // Voice record button
+        voiceRecordBtn.addEventListener('click', toggleVoiceRecording);
+        
+        // One-time voice recognition with mic button
+        document.getElementById('micBtn').addEventListener('click', () => {
+            if ('webkitSpeechRecognition' in window) {
+                const oneTimeRecognition = new webkitSpeechRecognition();
+                oneTimeRecognition.continuous = false;
+                oneTimeRecognition.interimResults = false;
+                oneTimeRecognition.lang = currentLanguage === 'ar' ? 'ar-SA' : 
+                                        currentLanguage === 'he' ? 'he-IL' : 
+                                        currentLanguage === 'es' ? 'es-ES' :
+                                        currentLanguage === 'fr' ? 'fr-FR' :
+                                        currentLanguage === 'de' ? 'de-DE' :
+                                        'en-US';
+                
+                oneTimeRecognition.onstart = () => {
+                    document.getElementById('micBtn').style.backgroundColor = '#ef4444'; // Red while recording
+                };
+                
+                oneTimeRecognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    textInput.value = transcript;
+                    document.getElementById('micBtn').style.backgroundColor = '';
+                    
+                    // Auto-translate the recognized text
+                    translateText();
+                };
+                
+                oneTimeRecognition.onerror = () => {
+                    document.getElementById('micBtn').style.backgroundColor = '';
+                };
+                
+                oneTimeRecognition.onend = () => {
+                    document.getElementById('micBtn').style.backgroundColor = '';
+                };
+                
+                oneTimeRecognition.start();
+            } else {
+                alert('Your browser does not support speech recognition.');
+            }
+        });
+        
+        // Language selection handlers
+        document.querySelectorAll('#languageDropdown div').forEach(option => {
+            option.addEventListener('click', function() {
+                const lang = this.getAttribute('data-lang');
+                const dir = this.getAttribute('data-dir');
+                
+                // Update selected language and direction
+                currentLanguage = lang;
+                currentLanguageDirection = dir;
+                
+                // Update display
+                selectedLanguage.textContent = this.textContent;
+                
+                // Apply RTL if needed
+                if (dir === 'rtl') {
+                    textInput.dir = 'rtl';
+                    textInput.classList.add('rtl');
+                } else {
+                    textInput.dir = 'ltr';
+                    textInput.classList.remove('rtl');
+                }
+                
+                // Close dropdown
+                document.getElementById('languageBtn').click();
+                
+                // Update speech recognition language if active
+                if (recognition) {
+                    recognition.lang = currentLanguage === 'ar' ? 'ar-SA' : 
+                                     currentLanguage === 'he' ? 'he-IL' : 
+                                     currentLanguage === 'es' ? 'es-ES' :
+                                     currentLanguage === 'fr' ? 'fr-FR' :
+                                     currentLanguage === 'de' ? 'de-DE' :
+                                     'en-US';
+                    if (isRecording) {
+                        stopVoiceRecording();
+                        startVoiceRecording();
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('#signLanguageDropdown div').forEach(option => {
+            option.addEventListener('click', function() {
+                selectedSignLanguage.textContent = this.textContent.split(' ')[0];
+                document.getElementById('signLanguageBtn').click(); // Close dropdown
+            });
+        });
+        
+        document.querySelectorAll('#cameraSignLanguageDropdown div').forEach(option => {
+            option.addEventListener('click', function() {
+                document.getElementById('selectedCameraSignLanguage').textContent = this.textContent.split(' ')[0];
+                document.getElementById('cameraSignLanguageBtn').click(); // Close dropdown
+            });
+        });
+        
+        document.querySelectorAll('#cameraLanguageDropdown div').forEach(option => {
+            option.addEventListener('click', function() {
+                const lang = this.getAttribute('data-lang');
+                const dir = this.getAttribute('data-dir');
+                
+                // Update language for camera mode
+                currentLanguage = lang;
+                currentLanguageDirection = dir;
+                
+                document.getElementById('selectedCameraLanguage').textContent = this.textContent;
+                document.getElementById('cameraLanguageBtn').click(); // Close dropdown
+                
+                // Update recognition results direction
+                updateRecognitionResults();
+            });
+        });
+        
+        // Toggle dropdown visibility
+        const dropdownBtns = [
+            'languageBtn', 
+            'signLanguageBtn', 
+            'cameraSignLanguageBtn', 
+            'cameraLanguageBtn'
+        ];
+        
+        dropdownBtns.forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    // Close all dropdowns
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                    
+                    // Toggle this dropdown
+                    this.parentNode.classList.toggle('active');
+                });
+            }
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+        
+        // Clean up resources when tab or page is closed
+        window.addEventListener('beforeunload', () => {
+            // Stop the camera if active
+            if (isCameraActive) {
+                stopCamera();
+            }
+            
+            // Stop voice recording if active
+            if (isRecording) {
+                stopVoiceRecording();
+            }
+            
+            // Clear any intervals
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+            }
+        });
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate the ASL dictionary
+            populateDictionary();
+            
+            // Set default avatar color
+            avatarColorBtns[0].click();
+            
+            // Set initial sign
+            updateSign('hello');
+            document.querySelector('.asl-word[data-sign="hello"]').classList.add('active');
+            
+            // Initialize voice recognition
+            setupVoiceRecognition();
+        });
+    </script>
 </body>
 </html>
